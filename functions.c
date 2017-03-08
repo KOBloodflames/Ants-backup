@@ -36,7 +36,7 @@ void print_map(worldmap w){
 	}
 }
 
-void read_initialization(){
+void read_initialization(game_settings *s){
 	char *line = NULL;
 	size_t linelength = 0;
 	char *key = NULL;
@@ -68,27 +68,59 @@ void read_initialization(){
 		if (end2-end == 1){
 			end2 = end;
 		}
-		printf("end 2:%d\nend 1:%d\n", end2, end);
+		//printf("end 2:%d\nend 1:%d\n", end2, end);
 		key = (char *) malloc(sizeof(char)*end);
 		for(int i = 0; i < end; i++){
 			//printf("I can go through the first loop!");
 			key[i] = line[i];
 		}
 		//printf("Linelenght: %zu, end: %d, end2: %d, string: %s, totalstring: %s.\n",linelength,end,end2,key,line);
-		if(strcmp(key,"ready") == 0){
-			free(key);
-			break;	
+		if(key != NULL){
+			if(strcmp(key,"ready") == 0){
+				free(key);
+				break;	
+			}
 		}
 		int multiplier = 1;
 		value = 0;
-		for(int i = end2 - 2; i > end ; i--){
+		for(int i = end2 - 1; i > end ; i--){
 			//printf("I can go through the second loop!");
 			value += multiplier*(line[i]-'0'); //-'0'?
 			multiplier *= 10;
 			//printf("%d * %d = intermediate value: %d\n", line[i] - '0', multiplier, value);
 		}
-	printf("key: %s\nvalue: %d\n", key, value);
-	free(key);	
+		if(strcmp(key, "turn")){
+			s->turn = value;
+		}
+		else if(strcmp(key, "loadtime")){
+			s->loadtime = value;
+		}
+		else if(strcmp(key, "turntime")){
+			s->turntime = value;
+		}
+		else if(strcmp(key, "rows")){
+			s->rows = value;
+		}
+		else if(strcmp(key, "cols")){
+			s->cols = value;
+		}
+		else if(strcmp(key, "turns")){
+			s->turns = value;
+		}
+		else if(strcmp(key, "viewradius2")){
+			s->viewradius2 = value;
+		}
+		else if(strcmp(key, "attackradius2")){
+			s->attackradius2 = value;
+		}
+		else if(strcmp(key, "spawnradius2")){
+			s->spawnradius2 = value;
+		}
+		else if(strcmp(key, "player_seed")){
+			s->player_seed = value;
+		}
+		//printf("key: %s\nvalue: %d\n", key, value);
+		free(key);	
 	}
 	free(line);
 }

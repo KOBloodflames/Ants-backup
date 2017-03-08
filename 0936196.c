@@ -4,15 +4,16 @@
 #include "0936196.h"
 
 worldmap world;
+game_settings settings;
 
 void main(void)
 {
+	read_initialization(game_settings *settings);
 	world.map = NULL;
-	world.rows = 20;
-	world.cols = 20;
+	world.rows = settings.rows;
+	world.cols = settings.cols;
 	initialize_map(world);
 	print_map(world);
-	read_initialization();
 	cleanup_map(world);
 }
 
