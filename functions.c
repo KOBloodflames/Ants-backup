@@ -10,6 +10,8 @@ worldmap initialize_map(worldmap world){
 	}
 	if(world.map == NULL){
 		printf("Error allocating memory");
+	}else{
+		world = reset_map(world);
 	}
 	return world;
 }
@@ -26,32 +28,32 @@ worldmap cleanup_map(worldmap world){
 void print_map(worldmap w){
 	char ant_letters[10] = {'a','b','c','d','e','f','g','h','i','j'};
 	char ant_hill_letters[10] = {'A','B','C','D','E','F','G','H','I','J'};
-	for(int i = 0; i < w.cols; i++){
-	printf("m ");
-		for(int j = 0; j < w.rows; j++){
+	for(int i = 0; i < w.rows; i++){
+	fprintf(stderr,"m ");
+		for(int j = 0; j < w.cols; j++){
 			switch(w.map[i][j].type){
 			case CELL_DIRT:
-				printf(".");
+				fprintf(stderr,".");
 				break;
 			case CELL_WATER:
-				printf("%%");
+				fprintf(stderr,"%%");
 				break;
 			case CELL_ANT:
-				printf("%c",ant_letters[w.map[i][j].owner]);
+				fprintf(stderr,"%c",ant_letters[w.map[i][j].owner]);
 				break;
 			case CELL_FOOD:
-				printf("*");
+				fprintf(stderr,"*");
 				break;
 			case CELL_HILL:
-				printf("%d",w.map[i][j].owner);
+				fprintf(stderr,"%d",w.map[i][j].owner);
 				break;
 			case CELL_ANT_ON_HILL:
-				printf("%c",ant_hill_letters[w.map[i][j].owner]);
+				fprintf(stderr,"%c",ant_hill_letters[w.map[i][j].owner]);
 				break;
 																					
 			}
 		}
-	printf("\n");
+	fprintf(stderr,"\n");
 	}
 }
 
@@ -59,7 +61,20 @@ worldmap reset_map(worldmap world){
 	for(int i = 0; i < world.rows; i++){
 		for(int j = 0; j < world.cols; j++){
 			world.map[i][j].type = CELL_DIRT;
-			world.map[i][j].owner = 0;
+			world.map[i][j].owner = -1;
+		}
+	}
+	return world;
+
+}
+
+worldmap soft_reset_map(worldmap world){
+	for(int i = 0; i < world.rows; i++){
+		for(int j = 0; j < world.cols; j++){
+			if(world.map[i][j].type != CELL_WATER && world.map[i][j].type != CELL_HILL){ 
+				world.map[i][j].type = CELL_DIRT;
+				world.map[i][j].owner = -1;
+			}
 		}
 	}
 	return world;
@@ -163,18 +178,17 @@ worldmap read_turn(worldmap w){
 	char *end = "end";
 	char *delimiters = " \n";
 	char *saveptr;
-	w = reset_map(w);
+	w = soft_reset_map(w);
 	while(getline(&line, &linelength, stdin) != 0){	
 		//printf("Linelenght: %zu, end: %d, end2: %d, string: %s, totalstring: %s.\n",linelength,end,end2,key,line);
 		if(strcmp(line,"\n")!=0){
 			long row = 0;
 			long col = 0;
 			long owner = 0;
-			fprintf(stderr,"I HAVE BEEN HERE, text: ");
+			//fprintf(stderr,"I HAVE BEEN HERE, text: ");
 			key = (char *) malloc(sizeof(char)*linelength);
 			key = strtok_r(line, delimiters, &saveptr);
-			fprintf(stderr, "%s\n", key);
-			fprintf(stderr, "compare: %d\n", strcmp(key,"turn"));
+			//fprintf(stderr, "%s\n", key);
 			if(key != NULL){
 				if(strcmp(key,"end") == 0){
 					w.end = 1;	
@@ -186,7 +200,7 @@ worldmap read_turn(worldmap w){
 				}
 				else if(strcmp(key, "turn") == 0){
 					w.turn = strtol(strtok(line, delimiters), &key, 10);	
-					fprintf(stderr, "saving a turn %d", w.turn);			
+					fprintf(stderr, "saving a turn %d\n", w.turn);			
 				}
 				else if(strcmp(key, "w") == 0){
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
@@ -204,7 +218,7 @@ worldmap read_turn(worldmap w){
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					col = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					owner = strtol(saveptr,&key,10);
-					fprintf(stderr, "saving a hill on row %ld and col %ld\n", row,col);
+					fprintf(stderr, "saving a hill of %ld on row %ld and col %ld\n", owner, row,col);
 					w.map[row][col].type = CELL_HILL;
 					w.map[row][col].owner = (int)owner;
 				}
@@ -215,13 +229,13 @@ worldmap read_turn(worldmap w){
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					col = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					owner = strtol(saveptr,&key,10);
-					fprintf(stderr, "saving an ant on row %ld and col %ld\n", row,col);
+					fprintf(stderr, "saving an ant of %ld on row %ld and col %ld\n", owner, row,col);
+					w.map[row][col].owner = (int)owner;
 					if(w.map[row][col].type == CELL_HILL){
 						w.map[row][col].type = CELL_ANT_ON_HILL;
 					}else{
 						w.map[row][col].type = CELL_ANT;
 					}
-					w.map[row][col].owner = (int)owner;
 			
 				}
 			}
