@@ -8,38 +8,51 @@ game_settings settings;
 
 void main(void)
 {
-	read_initialization(game_settings *settings);
+	fprintf(stderr,"Initializing world!\n");
+	read_initialization(&settings);
 	world.map = NULL;
 	world.rows = settings.rows;
 	world.cols = settings.cols;
-	initialize_map(world);
+	world.end = 0;
+	world.turn = 0;
+	fprintf(stderr,"Initializing map!\n");
+	world = initialize_map(world);
+	printf("go\n");
+	fflush(stdout);
+	fprintf(stderr, "Processed initialion\n");
+	while(!world.end){
+		world = read_turn(world);
+		send_orders(world);
+		printf("go\n");
+		fprintf(stderr, "Turn %d , end = %s \n" , world.turn , world.end ? "true" : "false" ) ;
+		fflush(stdout);
+		//print_map(world);
+	}
 	print_map(world);
-	cleanup_map(world);
+	world = cleanup_map(world);
 }
 
 
-
-
-void initialize_map(){
-	world.map = (cell **) malloc(world.rows * sizeof(cell*));
-	for(int i = 0; i < world.rows; i++){
-		world.map[i] = (cell *) malloc(world.cols * sizeof(cell));
-	}
-	if(world.map == NULL){
-		printf("Error allocating memory");
-	}else{
-		for(int i = 0; i < world.rows; i++){
-			for(int j = 0; j < world.cols; j++){
-				world.map[i][j].type = CELL_DIRT;
-				world.map[i][j].owner = 0;
+void send_orders(worldmap w){
+	for(int i = 0; i < w.rows; i++){
+		for(int j = 0; j < w.cols; j++){
+			if(w.map[i][j].type == CELL_ANT){
+				if(w.map[(i+1)%w.rows][j].type == CELL_DIRT || w.map[(i+1)%w.rows][j].type == CELL_FOOD || w.map[(i+1)%w.rows][j].type == CELL_HILL){ 
+					printf("o %d %d N\n", w.rows, w.cols);
+				}
+				if(w.map[(i-1)%w.rows][j].type == CELL_DIRT || w.map[(i-1)%w.rows][j].type == CELL_FOOD || w.map[(i-1)%w.rows][j].type == CELL_HILL){ 
+					printf("o %d %d S\n", w.rows, w.cols);
+				}
+				if(w.map[i][(j+1)%w.cols].type == CELL_DIRT || w.map[i][(j+1)%w.cols].type == CELL_FOOD || w.map[i][(j+1)%w.cols].type == CELL_HILL){ 
+					printf("o %d %d E\n", w.rows, w.cols);
+				}
+				if(w.map[i][(j+1)%w.cols].type == CELL_DIRT || w.map[i][(j+1)%w.cols].type == CELL_FOOD || w.map[i][(j+1)%w.cols].type == CELL_HILL){ 
+					printf("o %d %d W\n", w.rows, w.cols);
+				}
 			}
 		}
-	}
+	}	
+
 }
 
-void cleanup_map(){
-	for(int i = 0; i < world.rows; i++){
-		free(world.map[i]);
-	}
-	free(world.map);
-}
+
