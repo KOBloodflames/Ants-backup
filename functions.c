@@ -71,10 +71,16 @@ worldmap reset_map(worldmap world){
 worldmap soft_reset_map(worldmap world){
 	for(int i = 0; i < world.rows; i++){
 		for(int j = 0; j < world.cols; j++){
-			if(world.map[i][j].type != CELL_WATER && world.map[i][j].type != CELL_HILL){ 
+			if(world.map[i][j].type != CELL_WATER && world.map[i][j].type != CELL_HILL && (world.map[i][j].type != CELL_ANT || world.map[i][j].owner != 0)){ 
 				world.map[i][j].type = CELL_DIRT;
 				world.map[i][j].owner = -1;
 			}
+		}
+	}
+	for(int i = 0; i < world.antnr; i++){
+		world.ants[i].alive = 0;
+		if(world.ants[i].x == world.ants[i].targetx && world.ants[i].y == world.ants[i].targety){
+			world.ants[i].moving = 0;
 		}
 	}
 	return world;
@@ -162,12 +168,31 @@ void read_initialization(game_settings *s){
 			s->spawnradius2 = value;
 		}
 		else if(strcmp(key, "player_seed") == 0){
-			s->player_seed = value;
+s->player_seed = value;
 		}
 		//printf("key: %s\nvalue: %d\n", key, value);
 		free(key);	
 	}
 	free(line);
+}
+
+worldmap update_ants(worldmap w, int i, int j, int in, int jn, int ant){
+	fprintf(stderr, "Moving ant %d, from (%d,%d) to (%d,%d)\n",ant, i, j, in, jn);	
+	if(w.map[i][j].type == CELL_ANT_ON_HILL){
+		w.map[i][j].type = CELL_HILL;
+	}else{
+		w.map[i][j].type = CELL_DIRT;
+		w.map[i][j].owner = -1;
+	}
+	w.map[in][jn].owner = 0;
+	if(w.map[in][jn].type == CELL_HILL){
+		w.map[in][jn].type = CELL_ANT_ON_HILL;
+	}else{
+		w.map[in][jn].type = CELL_ANT;
+	}	
+	w.ants[ant].y = in;
+	w.ants[ant].x = jn;
+	return w;
 }
 
 
@@ -223,9 +248,6 @@ worldmap read_turn(worldmap w){
 					w.map[row][col].owner = (int)owner;
 				}
 				else if(strcmp(key, "a") == 0){
-					/*row = strtol(strtok(line, delimiters),&key, 10);
-					col = strtol(strtok(line, delimiters),&key,10);
-					owner = strtol(strtok(line, delimiters),&key,10);*/
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					col = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					owner = strtol(saveptr,&key,10);
@@ -236,7 +258,23 @@ worldmap read_turn(worldmap w){
 					}else{
 						w.map[row][col].type = CELL_ANT;
 					}
-			
+					int antfound = 0;
+					for(int i = 0 ; i < w.antnr; i++){
+						if(row == w.ants[i].y && col == w.ants[i].x){
+							fprintf(stderr, "Ant %d is alive!\n",i);
+							w.ants[i].alive = 1;
+							antfound = 1;
+							break;
+						}
+					}
+					if(!antfound){
+						w.ants[w.antnr].y = row;
+						w.ants[w.antnr].x = col;
+						w.ants[w.antnr].alive = 1;
+						w.ants[w.antnr].moving = 0;
+						fprintf(stderr, "Ant %d has spawned!\n",w.antnr);
+						w.antnr++;
+					}
 				}
 			}
 		}	
