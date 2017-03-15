@@ -11,6 +11,9 @@ worldmap initialize_map(worldmap world){
 	if(world.map == NULL){
 		printf("Error allocating memory");
 	}else{
+		world.ants = List_create();
+		world.ants->counter = 0;
+		world.ants->idcounter = 0;
 		world = reset_map(world);
 	}
 	return world;
@@ -77,11 +80,13 @@ worldmap soft_reset_map(worldmap world){
 			}
 		}
 	}
-	for(int i = 0; i < world.antnr; i++){
-		world.ants[i].alive = 0;
-		if(world.ants[i].x == world.ants[i].targetx && world.ants[i].y == world.ants[i].targety){
-			world.ants[i].moving = 0;
+	Node *current = world.ants->head;
+	for(int i = 0; i < world.ants->counter; i++){	
+		current->item->alive =0;
+		if(current->item->x == current->item->targetx && current->item->y == current->item->targety){
+			current->item->moving = 0;
 		}
+		current = current->next;
 	}
 	return world;
 
@@ -176,22 +181,34 @@ s->player_seed = value;
 	free(line);
 }
 
-worldmap update_ants(worldmap w, int i, int j, int in, int jn, int ant){
-	fprintf(stderr, "Moving ant %d, from (%d,%d) to (%d,%d)\n",ant, i, j, in, jn);	
-	if(w.map[i][j].type == CELL_ANT_ON_HILL){
-		w.map[i][j].type = CELL_HILL;
+worldmap update_ants(worldmap w, int i, int j, int in, int jn, Node *current){
+	if(w.map[in][jn].type != CELL_WATER){
+		if(jn < 0 || jn > w.cols){
+			fprintf(stderr, "amount of columns: %d, previous number j: %d\n",w.cols,jn);
+			jn = mod(jn,w.cols);
+		}	
+		if(in < 0 || in > w.rows){
+			fprintf(stderr, "amount of rows: %d, previous number i: %d\n",w.rows, in);
+			in = mod(in,w.rows);
+		}
+		fprintf(stderr, "Moving ant %d, from (%d,%d) to (%d,%d)\n",current->item->id, j, i, jn, in);	
+		if(w.map[i][j].type == CELL_ANT_ON_HILL){
+			w.map[i][j].type = CELL_HILL;
+		}else{
+			w.map[i][j].type = CELL_DIRT;
+			w.map[i][j].owner = -1;
+		}
+		w.map[in][jn].owner = 0;
+		if(w.map[in][jn].type == CELL_HILL){
+			w.map[in][jn].type = CELL_ANT_ON_HILL;
+		}else{
+			w.map[in][jn].type = CELL_ANT;
+		}	
+		current->item->y = in;
+		current->item->x = jn;
 	}else{
-		w.map[i][j].type = CELL_DIRT;
-		w.map[i][j].owner = -1;
+		fprintf(stderr, "Could not move!\n");
 	}
-	w.map[in][jn].owner = 0;
-	if(w.map[in][jn].type == CELL_HILL){
-		w.map[in][jn].type = CELL_ANT_ON_HILL;
-	}else{
-		w.map[in][jn].type = CELL_ANT;
-	}	
-	w.ants[ant].y = in;
-	w.ants[ant].x = jn;
 	return w;
 }
 
@@ -224,7 +241,7 @@ worldmap read_turn(worldmap w){
 					break;
 				}
 				else if(strcmp(key, "turn") == 0){
-					w.turn = strtol(strtok(line, delimiters), &key, 10);	
+					w.turn = strtol(strtok(saveptr, delimiters), &key, 10);	
 					fprintf(stderr, "saving a turn %d\n", w.turn);			
 				}
 				else if(strcmp(key, "w") == 0){
@@ -259,20 +276,24 @@ worldmap read_turn(worldmap w){
 						w.map[row][col].type = CELL_ANT;
 					}
 					int antfound = 0;
-					for(int i = 0 ; i < w.antnr; i++){
-						if(row == w.ants[i].y && col == w.ants[i].x){
-							fprintf(stderr, "Ant %d is alive!\n",i);
-							w.ants[i].alive = 1;
+					Node *current = w.ants->head;
+					for(int i = 0 ; i < w.ants->counter; i++){
+						if(row == current->item->y && col == current->item->x){
+							fprintf(stderr, "Ant %d is alive!\n",current->item->id);
+							current->item->alive = 1;
 							antfound = 1;
 							break;
+							
 						}
+						current = current->next;
 					}
-					if(!antfound){
-						w.ants[w.antnr].y = row;
-						w.ants[w.antnr].x = col;
-						w.ants[w.antnr].alive = 1;
-						w.ants[w.antnr].moving = 0;
-						fprintf(stderr, "Ant %d has spawned!\n",w.antnr);
+					if(!antfound && owner == 0){ //delete last when bug is found!
+						List_insert(w.ants);
+						w.ants->head->item->y = row;
+						w.ants->head->item->x = col;
+						w.ants->head->item->alive = 1;
+						w.ants->head->item->moving = 0;
+						fprintf(stderr, "Ant %d has spawned!\n",w.ants->head->item->id);
 						w.antnr++;
 					}
 				}
@@ -281,4 +302,238 @@ worldmap read_turn(worldmap w){
 	}
 	free(line);
 	return w;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*modulo*/
+
+int mod(int a, int b){
+	if(b < 0){ //you can check for b == 0 separately and do what you want
+		return mod(a, -b);   
+	}
+	int mod = a % b;
+	if(mod < 0){
+		mod+=b;
+	}
+	return mod;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*linked list commands*/
+
+void List_print(ant *list){
+	Node *start = list->head;
+	for(int i = 0; i < list->counter; i++){
+		fprintf(stderr,"-> id: %i\n",start->item->id);
+		start = start->next;
+	}
+}
+
+void List_append(ant *list){
+	if(list->counter!=0){	
+		Node *previous = list->head->prev;
+		/*for(int i = 1; i < list->counter; i++){
+			previous = previous->next;	
+		}*/
+		Node *new;
+		Item *newitem; 
+		newitem = (Item *)malloc(sizeof(Item));
+		new = (Node *)malloc(sizeof(Node));
+		newitem->id = list->idcounter;
+		new->item = newitem;
+		Node *next = previous->next;
+		previous->next = new;
+		new->prev = previous;
+		new->next = next;
+		next->prev = new;
+		list->counter++;
+		list->idcounter++;
+	}else{
+		Node *start;
+		Item *item;
+		item = (Item *)malloc(sizeof(Item));
+		start = (Node *)malloc(sizeof(Node));
+		item->id = 0;
+		start->item = item;
+		start->next = start;
+		start->prev = start;
+		list->head = start;
+		list->counter++;
+	}
+}
+
+void List_putfirst(ant *list, Node *node){
+	Node *previous = list->head;
+	int found = 0;
+	for(int i = 0; i < list->counter; i++){
+		if(previous == node){
+			found = 1;
+			break;
+		}else{	
+			previous = previous->next;
+		}	
+	}
+	if(found){
+		Node *before = previous->prev;
+		Node *after = previous->next;
+		Node *last = list->head->prev;
+		before->next = after;
+		after->prev = before;		
+		previous->next = list->head;
+		previous->prev = last;
+		list->head->prev = previous;
+		last->next = previous;
+		list->head = previous;	
+	}else{
+		printf("Error, node not found!\n");
+	}
+
+}
+
+void List_sort(ant* list){
+	int *id;
+	Node *previous = list->head;
+	id = (int *)malloc(sizeof(int)*list->counter);
+	for(int i = 0; i < list->counter; i++){
+		id[i] = previous->item->id;		
+		previous = previous->next;
+	}
+	//bubble sort
+	int finished = 0;
+	while(!finished){
+		finished = 1;
+		for(int i = 0; i < (list->counter-1);i++){
+			if(id[i+1] > id[i]){
+				finished = 0;
+				int temp = id[i];
+				id[i] = id[i+1];
+				id[i+1] = temp;
+			}
+		}
+	}
+	for(int i = 0; i < list->counter; i++){
+	    Node* tomove = List_find(list,id[i]);
+            List_putfirst(list,tomove);
+	}
+
+}
+
+void List_remove(ant *list, Node *node){
+	Node *previous = list->head;
+	int found = 0;
+	for(int i = 0; i < list->counter; i++){
+		if(previous == node){
+			found = 1;
+			break;
+		}else{	
+			previous = previous->next;
+		}	
+	}
+	if(found){
+		fprintf(stderr, "List before deleting ant %d\n",node->item->id);
+		List_print(list);
+		fprintf(stderr, "Deleted ant %d! New list will be printed:\n", node->item->id);
+		if(previous == list->head){
+			list->head = previous->next;
+		}
+		Node *before = previous->prev;
+		Node *after = previous->next;
+		before->next = after;
+		after->prev = before;
+		free(previous->item);
+		free(previous);
+		list->counter--;
+		List_print(list);
+	}else{
+		fprintf(stderr,"Error, node not found!\n");
+	}
+}
+
+void List_destroy(ant* list){
+	Node *previous = list->head;
+	for(int i = 0; i < list->counter; i++){
+		Node *next = previous->next;
+		free(previous->item);
+		free(previous);
+		previous = next;
+	}
+	list->counter = 0;
+}
+
+void List_insert(ant *list){
+	if(list->counter != 0){
+		Node *next = list->head;
+		Node *last = list->head->prev;
+		Node *new;
+		Item *newitem; 
+		newitem = (Item *)malloc(sizeof(Item));
+		new = (Node *)malloc(sizeof(Node));
+		newitem->id = list->idcounter;
+		new->item = newitem;
+		next->prev = new;
+		new->next = next;
+		new->prev = last;
+		last->next = new;
+		list->head = new;
+		list->counter++;
+		list->idcounter++;
+	}
+	else{
+		Node *start;
+		Item *item;
+		item = (Item *)malloc(sizeof(Item));
+		start = (Node *)malloc(sizeof(Node));
+		item->id = 0;
+		start->item = item;
+		start->next = start;
+		start->prev = start;
+		list->head = start;
+		list->counter++;
+		list->idcounter++;
+	}
+}
+
+
+ant *List_create(){
+	ant *list;
+	list = (ant *)malloc(sizeof(ant));
+}
+
+
+
+Node *List_find(ant *list, int id){
+	Node *previous = list->head;
+	for(int i = 0; i < list->counter; i++){
+		if(previous->item->id == id){
+			return previous;
+		}else{
+			previous = previous->next;	
+		}
+	}
+	return 0;
 }

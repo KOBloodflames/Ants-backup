@@ -24,6 +24,7 @@ void main(void)
 		world = read_turn(world);
 		//print_map(world);
 		world = send_orders(world);
+		List_print(world.ants);
 		printf("go\n");
 		fprintf(stderr, "Turn %d , end = %s \n" , world.turn , world.end ? "true" : "false" ) ;
 		fflush(stdout);
@@ -34,145 +35,305 @@ void main(void)
 	world = cleanup_map(world);
 }
 
-/*void DFS(vertex i)
-{
-    visited[i]=1;
-    for each w adjacent to i
-        if(!visited[w])
-            DFS(w);
-}*/
 
-worldmap find_route(worldmap w, int Y, int X, int Yn, int Xn, int ant)
+
+worldmap find_route(worldmap w, int Y, int X, int Yn, int Xn, Node *current)
 {
 	int i = Y;
 	int j = X;
-	w.ants[ant].targetx = Xn;
-	w.ants[ant].targety = Yn;
-	fprintf(stderr,"searching for a way to food on (%d,%d)",Xn, Yn);
+	current->item->targetx = Xn;
+	current->item->targety = Yn;
+	fprintf(stderr,"searching for a way to (%d,%d)\n",Xn, Yn);
 	if(Yn > Y){
-		if(w.map[i+1][j].type != CELL_WATER){
+		if(w.map[i+1][j].type != CELL_WATER && w.map[i+1][j].type != CELL_ANT){
 			printf("o %d %d S\n", i, j);
 			fprintf(stderr,"order: o %d %d S\n",i, j);
-			w = update_ants(w,i,j,i+1,j, ant);
-			w.ants[ant].moving = 1;
+			current->item->lastmove = S;
+			w = update_ants(w,i,j,i+1,j, current);
+			current->item->moving = 1;
+			current->item->water = 0;
 			return w;
 		}
 		else if(Xn > X){
-			if(w.map[i][j+1].type != CELL_WATER){
+			if(w.map[i][j+1].type != CELL_WATER && w.map[i][j+1].type != CELL_ANT){
 				printf("o %d %d E\n", i, j);
 				fprintf(stderr,"order: o %d %d E\n",i, j);
-				w = update_ants(w,i,j,i,j+1, ant);
-				w.ants[ant].moving = 1;
+				current->item->lastmove = E;
+				w = update_ants(w,i,j,i,j+1, current);
+				current->item->moving = 1;
+				current->item->water = 0;
 				return w;
 			}
 		}else if(Xn < X){
-			if(w.map[i][j-1].type != CELL_WATER){
+			if(w.map[i][j-1].type != CELL_WATER && w.map[i][j-1].type != CELL_ANT){
 				printf("o %d %d W\n", i, j);
 				fprintf(stderr,"order: o %d %d W\n",i, j);
-				w = update_ants(w,i,j,i,j-1, ant);
-				w.ants[ant].moving = 1;
+				current->item->lastmove = W;
+				w = update_ants(w,i,j,i,j-1, current);
+				current->item->moving = 1;
+				current->item->water = 0;
 				return w;
 			}
 		}else{
+			fprintf(stderr,"path blocked!\n");
+			current->item->moving = 0;
 			return w;
 		}
 	}else if(Yn < Y){
-		if(w.map[i-1][j].type != CELL_WATER){
+		if(w.map[i-1][j].type != CELL_WATER&&w.map[i-1][j].type != CELL_ANT){
 			printf("o %d %d N\n", i, j);
 			fprintf(stderr,"order: o %d %d N\n",i, j);
-			w = update_ants(w,i,j,i-1,j, ant);
-			w.ants[ant].moving = 1;
+			current->item->lastmove = N;
+			w = update_ants(w,i,j,i-1,j, current);
+			current->item->moving = 1;
+			current->item->water = 0;
 			return w;
 		}
-		else if(Xn > X){
-			if(w.map[i][j+1].type != CELL_WATER){
-				printf("o %d %d E\n", i, j);
-				fprintf(stderr,"order: o %d %d E\n",i, j);
-				w = update_ants(w,i,j,i,j+1, ant);
-				w.ants[ant].moving = 1;
-				return w;
-			}
-		}else if(Xn < X){
-			if(w.map[i][j-1].type != CELL_WATER){
-				printf("o %d %d W\n", i, j);
-				fprintf(stderr,"order: o %d %d W\n",i, j);
-				w = update_ants(w,i,j,i,j-1, ant);
-				w.ants[ant].moving = 1;
-				return w;
-			}
+		else if((Xn > X)&&(w.map[i][j+1].type != CELL_WATER&&w.map[i][j+1].type != CELL_ANT)){
+			printf("o %d %d E\n", i, j);
+			fprintf(stderr,"order: o %d %d E\n",i, j);
+			current->item->lastmove = E;
+			w = update_ants(w,i,j,i,j+1, current);
+			current->item->moving = 1;
+			current->item->water = 0;
+			return w;
+		}else if((Xn < X)&&(w.map[i][j-1].type != CELL_WATER&&w.map[i][j-1].type != CELL_ANT)){
+			printf("o %d %d W\n", i, j);
+			fprintf(stderr,"order: o %d %d W\n",i, j);
+			current->item->lastmove = W;
+			w = update_ants(w,i,j,i,j-1, current);
+			current->item->moving = 1;
+			current->item->water = 0;
+			return w;
 		}else{
+			fprintf(stderr,"path blocked!\n");
+			current->item->moving = 0;
 			return w;
 		}
 
 	}
 	else if(Xn > X){
-		if(w.map[i][j+1].type != CELL_WATER){
+		if(w.map[i][j+1].type != CELL_WATER&&w.map[i][j+1].type != CELL_ANT){
 			printf("o %d %d E\n", i, j);
 			fprintf(stderr,"order: o %d %d E\n",i, j);
-			w = update_ants(w,i,j,i,j+1, ant);
-			w.ants[ant].moving = 1;
+			current->item->lastmove = E;
+			w = update_ants(w,i,j,i,j+1, current);
+			current->item->moving = 1;
+			current->item->water = 0;
 			return w;
 		}
 	}else if(Xn < X){
-		if(w.map[i][j-1].type != CELL_WATER){
+		if(w.map[i][j-1].type != CELL_WATER&&w.map[i][j-1].type != CELL_ANT){
 			printf("o %d %d W\n", i, j);
 			fprintf(stderr,"order: o %d %d W\n",i, j);
-			w = update_ants(w,i,j,i,j-1, ant);
-			w.ants[ant].moving = 1;
+			current->item->lastmove = W;
+			w = update_ants(w,i,j,i,j-1, current);
+			current->item->moving = 1;
+			current->item->water = 0;
 			return w;
 		}
 	}else{
+		fprintf(stderr,"path blocked!\n");
+		current->item->moving = 0;
 		return w;
-	}	
+	}
+	fprintf(stderr,"path blocked!\n");
+	current->item->moving = 0;
+	return w;	
 }
 
 
 worldmap send_orders(worldmap w){
 			//fprintf(stderr, "checking row %d and col %d with type %d and owner %d\n", i,j,w.map[i][j].type,w.map[i][j].owner);
-	for(int z = 0; z < w.antnr; z++){
-		if(w.ants[z].alive == 1){
-			if(w.ants[z].moving == 0){
-				int i = w.ants[z].y;
-				int j = w.ants[z].x;					
+	Node *current = w.ants->head;	
+	for(int z = 0; z < w.ants->counter; z++){
+		fprintf(stderr, "Searching move for ant %d\n",current->item->id);	
+		if(current->item->alive == 1){
+			if(current->item->moving == 0){
+				int i = current->item->y;
+				int j = current->item->x;					
 				int route_found = 0;
-				for(int a = -2; a <= 2; a++){
-					for(int b = -2; b<=2; b++){
-						if(w.map[i+a][j+b].type ==  CELL_FOOD || (w.map[i+a][j+b].type ==  CELL_HILL && w.map[i+a][j+b].owner !=  0)){
-							w = find_route(w,i,j,i+a,j+a, z);
-							if(w.ants[z].moving == 1){break;}	
+				for(int a = -3; a <= 3; a++){
+					for(int b = -3; b<=3; b++){
+						if(w.map[mod(i+a,w.rows)][mod(j+b,w.cols)].type ==  CELL_FOOD || (w.map[mod(i+a,w.rows)][mod(j+b,w.cols)].type ==  CELL_HILL && w.map[mod(i+a,w.rows)][mod(j+b,w.cols)].owner !=  0)){
+							w = find_route(w,i,j,mod(i+a,w.rows),mod(j+b,w.cols), current);
+							if(current->item->moving == 1){break;}	
 						}
 					}
-					if(w.ants[z].moving == 1){break;}	
+					if(current->item->moving == 1){break;}	
 				}
-				if(w.ants[z].moving == 0){
+				/*if(w.ants[z].moving == 0){
 					if(w.map[i][(j-1)%w.cols].type != CELL_WATER){ 
 						printf("o %d %d W\n", i, j);
 						fprintf(stderr,"order: o %d %d W\n",i, j);
 						w = update_ants(w,i,j,i,j-1, z);
+						w.ants[z].lastmove = W;
 					
 					}				
 					else if(w.map[(i-1)%w.rows][j].type != CELL_WATER){ 
 						printf("o %d %d N\n", i, j);
 						fprintf(stderr,"order: o %d %d N\n", i, j);
 						w = update_ants(w,i,j,i-1,j,z);
+						w.ants[z].lastmove = N;
 					}
 					else if(w.map[i][(j+1)%w.cols].type != CELL_WATER){ 
 						printf("o %d %d E\n", i, j);
 						fprintf(stderr,"order: o %d %d E\n", i, j);
 						w = update_ants(w,i,j,i,j+1,z);
+						w.ants[z].lastmove = E;
 					}
 					else if(w.map[(i+1)%w.rows][j].type != CELL_WATER){ 
 						printf("o %d %d S\n", i, j);
 						fprintf(stderr,"order: o %d %d S\n", i, j);
 						w = update_ants(w,i,j,i+1,j,z);
+						w.ants[z].lastmove = S;
 					
+					}
+				}*/
+				if(current->item->moving == 0){
+					if(w.map[i][mod((j-1),w.cols)].type == CELL_WATER && w.map[mod((i-1),w.rows)][j].type != CELL_ANT && w.map[mod((i-1),w.rows)][j].type != CELL_WATER){ 
+						printf("o %d %d N\n", i, j);
+						fprintf(stderr,"order: o %d %d N\n",i, j);
+						current->item->lastmove = N;
+						current->item->water = 1;
+						w = update_ants(w,i,j,i-1,j, current);					
+					}				
+					else if(w.map[mod((i-1),w.rows)][j].type == CELL_WATER&&w.map[i][mod((j+1),w.cols)].type != CELL_ANT&&w.map[i][mod((j+1),w.cols)].type != CELL_WATER){ 
+						printf("o %d %d E\n", i, j);
+						fprintf(stderr,"order: o %d %d E\n", i, j);
+						current->item->lastmove = E;
+						current->item->water = 1;
+						w = update_ants(w,i,j,i,j+1,current);
+					}
+					else if(w.map[i][mod((j+1),w.cols)].type == CELL_WATER&&w.map[mod((i+1),w.rows)][j].type != CELL_ANT&&w.map[mod((i+1),w.rows)][j].type != CELL_WATER){ 
+						printf("o %d %d S\n", i, j);
+						fprintf(stderr,"order: o %d %d S\n", i, j);
+						current->item->lastmove = S;
+						current->item->water = 1;
+						w = update_ants(w,i,j,i+1,j,current);
+					}
+					else if(w.map[mod((i+1),w.rows)][j].type == CELL_WATER&&w.map[i][mod((j-1),w.cols)].type != CELL_ANT&&w.map[i][mod((j-1),w.cols)].type != CELL_WATER){ 
+						printf("o %d %d W\n", i, j);
+						fprintf(stderr,"order: o %d %d W\n", i, j);
+						current->item->lastmove = W;
+						current->item->water = 1;
+						w = update_ants(w,i,j,i,j-1,current);
+					
+					}else if(current->item->water){
+						current->item->water = 0;
+						switch(current->item->lastmove){
+							case N:
+								if(w.map[i][mod((j-1),w.cols)].type == CELL_WATER&&w.map[i][mod((j-1),w.cols)].type != CELL_ANT){
+									printf("o %d %d W\n", i, j);
+									fprintf(stderr,"order: o %d %d W\n", i, j);
+									current->item->lastmove = W;
+									w = update_ants(w,i,j,i,j-1,current);	
+								}
+								else if(w.map[mod(i+1,w.rows)][j].type != CELL_WATER && w.map[mod(i+1,w.rows)][j].type != CELL_ANT){
+									printf("o %d %d S\n", i, j);
+									fprintf(stderr,"order: o %d %d S\n", i, j);
+									current->item->lastmove = S;
+									w = update_ants(w,i,j,i+1,j,current);
+								}			
+								break;
+							case E:
+								if(w.map[mod(i-1,w.rows)][j].type != CELL_WATER&&w.map[mod(i-1,w.rows)][j].type != CELL_ANT){
+									printf("o %d %d N\n", i, j);
+									fprintf(stderr,"order: o %d %d N\n",i, j);
+									current->item->lastmove = N;
+									w = update_ants(w,i,j,i-1,j, current);
+								}else if(w.map[i][mod((j-1),w.cols)].type == CELL_WATER&&w.map[i][mod((j-1),w.cols)].type != CELL_ANT){
+									printf("o %d %d W\n", i, j);
+									fprintf(stderr,"order: o %d %d W\n", i, j);
+									current->item->lastmove = W;
+									w = update_ants(w,i,j,i,j-1,current);	
+								}
+								break;
+							case S:
+								if(w.map[i][mod(j+1,w.cols)].type != CELL_WATER&&w.map[i][mod(j+1,w.cols)].type != CELL_ANT){
+									printf("o %d %d E\n", i, j);
+									fprintf(stderr,"order: o %d %d E\n", i, j);
+									current->item->lastmove = E;
+									w = update_ants(w,i,j,i,j+1,current);
+								}else if(w.map[mod(i-1,w.rows)][j].type != CELL_WATER&&w.map[mod(i-1,w.rows)][j].type != CELL_ANT){
+									printf("o %d %d N\n", i, j);
+									fprintf(stderr,"order: o %d %d N\n",i, j);
+									current->item->lastmove = N;
+									w = update_ants(w,i,j,i-1,j, current);
+								}
+								break;
+							case W:
+								if(w.map[mod(i+1,w.rows)][j].type != CELL_WATER && w.map[mod(i+1,w.rows)][j].type != CELL_ANT){
+									printf("o %d %d S\n", i, j);
+									fprintf(stderr,"order: o %d %d S\n", i, j);
+									current->item->lastmove = S;
+									w = update_ants(w,i,j,i+1,j,current);
+								}else if(w.map[i][mod(j+1,w.cols)].type != CELL_WATER&&w.map[i][mod(j+1,w.cols)].type != CELL_ANT){
+									printf("o %d %d E\n", i, j);
+									fprintf(stderr,"order: o %d %d E\n", i, j);
+									current->item->lastmove = E;
+									w = update_ants(w,i,j,i,j+1,current);
+								}
+								break;
+							default:
+								if(w.map[mod(i+1,w.rows)][j].type != CELL_WATER && w.map[mod(i+1,w.rows)][j].type != CELL_ANT){
+									printf("o %d %d S\n", i, j);
+									fprintf(stderr,"order: o %d %d S\n", i, j);
+									current->item->lastmove = S;
+									w = update_ants(w,i,j,i+1,j,current);
+								}else if(w.map[mod(i-1,w.rows)][j].type != CELL_WATER&&w.map[mod(i-1,w.rows)][j].type != CELL_ANT){
+									printf("o %d %d N\n", i, j);
+									fprintf(stderr,"order: o %d %d N\n",i, j);
+									current->item->lastmove = N;
+									w = update_ants(w,i,j,i-1,j, current);
+								}
+								break;
+						}
+					}
+					else{
+						if(w.map[i][mod((j-1),w.cols)].type != CELL_WATER&&w.map[i][mod((j-1),w.cols)].type != CELL_ANT){ 
+							printf("o %d %d W\n", i, j);
+							fprintf(stderr,"order: o %d %d W\n",i, j);
+							w = update_ants(w,i,j,i,j-1, current);
+							current->item->lastmove = W;
+					
+						}				
+						else if(w.map[mod((i-1),w.rows)][j].type != CELL_WATER&&w.map[mod((i-1),w.rows)][j].type != CELL_ANT){ 
+							printf("o %d %d N\n", i, j);
+							fprintf(stderr,"order: o %d %d N\n", i, j);
+							w = update_ants(w,i,j,i-1,j,current);
+							current->item->lastmove = N;
+						}
+						else if(w.map[i][mod((j+1),w.cols)].type != CELL_WATER&&w.map[i][mod((j+1),w.cols)].type != CELL_ANT){ 
+							printf("o %d %d E\n", i, j);
+							fprintf(stderr,"order: o %d %d E\n", i, j);
+							w = update_ants(w,i,j,i,j+1,current);
+							current->item->lastmove = E;
+						}
+						else if(w.map[mod((i+1),w.rows)][j].type != CELL_WATER&&w.map[mod((i+1),w.rows)][j].type != CELL_ANT){ 
+							printf("o %d %d S\n", i, j);
+							fprintf(stderr,"order: o %d %d S\n", i, j);
+							w = update_ants(w,i,j,i+1,j,current);
+							current->item->lastmove = S;
+					
+						}
 					}
 				}
 			}
 			else{
-				w = find_route(w,w.ants[z].y,w.ants[z].x,w.ants[z].targety, w.ants[z].targetx, z);
+				w = find_route(w,current->item->y,current->item->x,current->item->targety, current->item->targetx, current);
 			}
+		current = current->next;
+		fprintf(stderr, "the ant was alived and a move was found! the next ant to check will become: %d\n", current->item->id);
 		}
+		else{
+			Node *next = current->next;
+			fprintf(stderr, "The ant has been removed! the next ant to check will become: %d\n", current->item->id);
+			world.map[current->item->y][current->item->x].type = CELL_DIRT;
+			world.map[current->item->y][current->item->x].owner = -1;
+			List_remove(world.ants, current);
+			current = next;
+		} //pls be the correct position <3
 	}
 	return w;	
 }
