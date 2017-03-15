@@ -27,6 +27,109 @@ worldmap cleanup_map(worldmap world){
 	return world;
 }
 
+char *search(worldmap w, int Y, int X, int Yn, int Xn, Node *current){
+
+	Xn = mod(Xn,w.cols);
+	Yn = mod(Yn,w.rows);
+	current->item->targetx = Xn;
+	current->item->targety = Yn;
+	fprintf(stderr,"searching for a way to (%d,%d) using BFS\n",Xn, Yn);
+	ant *queue = List_create();
+	List_insert(queue);
+	List_print(queue);
+	queue->head->bfs->n = 0;
+	queue->head->bfs->x = X;
+	queue->head->bfs->y = Y;
+	w.map[Y][X].bfs = 0;
+	int finished = 0;
+	int noroute = 0;
+	int longest = 999;
+	//FOR MAP, VISITED = 0
+	int maxdepth = 7;
+	while(!finished){
+		if(queue->counter == 0){
+			finished = 1;
+			noroute = 1;
+		}
+		else if(queue->head->bfs->x == Xn && queue->head->bfs->y == Yn){
+			longest = queue->head->bfs->n;
+			finished = 1;
+		}else{
+			if(queue->head->bfs->n+1 > maxdepth){
+				finished = 1;
+				noroute = 1;
+			}
+			int x = queue->head->bfs->x;
+			int y = queue->head->bfs->y;
+			w.map[y][x].bfsvisited = 1;
+			Node *delete = queue->head;
+			if(w.map[y+1][x].type != CELL_WATER && !w.map[y+1][x].bfsvisited){
+				List_append(queue);
+				queue->head->prev->bfs->n = delete->bfs->n + 1;
+				w.map[y+1][x].bfs = queue->head->bfs->n;
+				queue->head->prev->bfs->x = x;
+				queue->head->prev->bfs->y = y+1;
+			}
+			if(w.map[y-1][x].type != CELL_WATER && !w.map[y-1][x].bfsvisited){
+				List_append(queue);
+				queue->head->prev->bfs->n = delete->bfs->n + 1;
+				w.map[y-1][x].bfs = queue->head->bfs->n;
+				queue->head->prev->bfs->x = x;
+				queue->head->prev->bfs->y = y-1;
+			}
+			if(w.map[y][x+1].type != CELL_WATER && !w.map[y][x+1].bfsvisited){
+				List_append(queue);
+				queue->head->bfs->n = delete->bfs->n + 1;
+				w.map[y][x+1].bfs = queue->head->bfs->n;
+				queue->head->prev->bfs->x = x+1;
+				queue->head->prev->bfs->y = y;
+			}
+			if(w.map[y][x-1].type != CELL_WATER && !w.map[y][x-1].bfsvisited){
+				List_append(queue);
+				queue->head->prev->bfs->n = delete->bfs->n + 1;
+				w.map[y][x-1].bfs = queue->head->bfs->n;
+				queue->head->prev->bfs->x = x-1;
+				queue->head->prev->bfs->y = y;
+			}
+			List_remove(queue,delete);
+		}
+	}
+	if(!noroute){
+		char *route = (char *)malloc(sizeof(char)*longest);
+		int Xl = Xn;
+		int Yl = Yn;
+		int num = longest;
+		for(int i = longest-1; i >= 0; i--){
+			if(w.map[Yl+1][Xl].bfs == num-1){
+				route[i] = 'N';
+				num--;
+				Yl = Yl+1;
+			}else if(w.map[Yl-1][Xl].bfs == num-1){
+				route[i] = 'S';
+				num--;
+				Yl = Yl-1;
+			}else if(w.map[Yl][Xl+1].bfs == num-1){
+				route[i] = 'W';
+				num--;
+				Xl = Xl+1;
+			}else if(w.map[Yl][Xl-1].bfs == num-1){
+				route[i] = 'E';
+				num--;
+				Xl = Xl-1;
+			}else{
+				fprintf(stderr, "Something went wrong in the DFS!\n");
+			}
+		}
+		return route;
+	}
+	else{
+		char *wrong = "x";
+		return wrong;
+	}
+
+	
+}
+
 
 void print_map(worldmap w){
 	char ant_letters[10] = {'a','b','c','d','e','f','g','h','i','j'};
@@ -362,8 +465,11 @@ void List_append(ant *list){
 		}*/
 		Node *new;
 		Item *newitem; 
+		BFS *newbfs;
 		newitem = (Item *)malloc(sizeof(Item));
+		newbfs = (BFS *)malloc(sizeof(BFS));
 		new = (Node *)malloc(sizeof(Node));
+		new->bfs = newbfs;
 		newitem->id = list->idcounter;
 		new->item = newitem;
 		Node *next = previous->next;
@@ -376,10 +482,13 @@ void List_append(ant *list){
 	}else{
 		Node *start;
 		Item *item;
+		BFS *bfs;
 		item = (Item *)malloc(sizeof(Item));
 		start = (Node *)malloc(sizeof(Node));
+		bfs = (BFS *)malloc(sizeof(BFS));
 		item->id = 0;
 		start->item = item;
+		start->bfs = bfs;
 		start->next = start;
 		start->prev = start;
 		list->head = start;
@@ -491,10 +600,13 @@ void List_insert(ant *list){
 		Node *last = list->head->prev;
 		Node *new;
 		Item *newitem; 
+		BFS *newbfs;
 		newitem = (Item *)malloc(sizeof(Item));
 		new = (Node *)malloc(sizeof(Node));
+		newbfs = (BFS *)malloc(sizeof(BFS));
 		newitem->id = list->idcounter;
 		new->item = newitem;
+		new->bfs = newbfs;
 		next->prev = new;
 		new->next = next;
 		new->prev = last;
@@ -506,10 +618,13 @@ void List_insert(ant *list){
 	else{
 		Node *start;
 		Item *item;
+		BFS *bfs;
+		bfs = (BFS *)malloc(sizeof(BFS));
 		item = (Item *)malloc(sizeof(Item));
 		start = (Node *)malloc(sizeof(Node));
 		item->id = 0;
 		start->item = item;
+		start->bfs = bfs;
 		start->next = start;
 		start->prev = start;
 		list->head = start;

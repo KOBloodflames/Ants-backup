@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "0936196.h"
 
 worldmap world;
@@ -156,7 +157,16 @@ worldmap send_orders(worldmap w){
 				for(int a = -3; a <= 3; a++){
 					for(int b = -3; b<=3; b++){
 						if(w.map[mod(i+a,w.rows)][mod(j+b,w.cols)].type ==  CELL_FOOD || (w.map[mod(i+a,w.rows)][mod(j+b,w.cols)].type ==  CELL_HILL && w.map[mod(i+a,w.rows)][mod(j+b,w.cols)].owner !=  0)){
-							w = find_route(w,i,j,mod(i+a,w.rows),mod(j+b,w.cols), current);
+							if(1){
+								current->item->route = search(w,i,j,mod(i+a,w.rows),mod(j+b,w.cols), current);
+								current->item->routenr = 0;
+								if(strcmp(current->item->route, "x") != 0){
+									current->item->moving == 1;
+								}
+								break;
+							}else{
+								w = find_route(w,i,j,mod(i+a,w.rows),mod(j+b,w.cols), current);
+							}
 							if(current->item->moving == 1){break;}	
 						}
 					}
@@ -321,7 +331,49 @@ worldmap send_orders(worldmap w){
 				}
 			}
 			else{
-				w = find_route(w,current->item->y,current->item->x,current->item->targety, current->item->targetx, current);
+				//w = find_route(w,current->item->y,current->item->x,current->item->targety, current->item->targetx, current);
+				int i = current->item->y;
+				int j = current->item->x;
+				switch(current->item->route[current->item->routenr]){
+					case 'N':
+						if(w.map[mod((i-1),w.rows)][j].type != CELL_WATER&&w.map[mod((i-1),w.rows)][j].type != CELL_ANT){ 
+							printf("o %d %d N\n", i, j);
+							fprintf(stderr,"order: o %d %d N\n", i, j);
+							w = update_ants(w,i,j,i-1,j,current);
+							current->item->lastmove = N;
+							current->item->routenr--;
+						}
+					break;
+					case 'E':
+						if(w.map[i][mod((j+1),w.cols)].type != CELL_WATER&&w.map[i][mod((j+1),w.cols)].type != CELL_ANT){ 
+							printf("o %d %d E\n", i, j);
+							fprintf(stderr,"order: o %d %d E\n", i, j);
+							w = update_ants(w,i,j,i,j+1,current);
+							current->item->lastmove = E;
+							current->item->routenr--;
+						}
+					break;
+					case 'S':
+						if(w.map[mod((i+1),w.rows)][j].type != CELL_WATER&&w.map[mod((i+1),w.rows)][j].type != CELL_ANT){ 
+							printf("o %d %d S\n", i, j);
+							fprintf(stderr,"order: o %d %d S\n", i, j);
+							w = update_ants(w,i,j,i+1,j,current);
+							current->item->lastmove = S;
+							current->item->routenr--;
+					
+						}
+					break;
+					case 'W':
+						if(w.map[i][mod((j-1),w.cols)].type != CELL_WATER&&w.map[i][mod((j-1),w.cols)].type != CELL_ANT){ 
+							printf("o %d %d W\n", i, j);
+							fprintf(stderr,"order: o %d %d W\n",i, j);
+							w = update_ants(w,i,j,i,j-1, current);
+							current->item->lastmove = W;
+							current->item->routenr--;
+					
+						}	
+					break;
+				}
 			}
 		current = current->next;
 		fprintf(stderr, "the ant was alived and a move was found! the next ant to check will become: %d\n", current->item->id);
