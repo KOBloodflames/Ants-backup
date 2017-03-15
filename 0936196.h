@@ -29,7 +29,9 @@ Node* List_find(ant *list,int id);
 void List_putfirst(ant *list,Node* node);
 void List_sort(ant* list);
 
-char *search(worldmap w, int Y, int X, int Yn, int Xn, Node *current);
+void print_bfs(worldmap w);
+
+char *search(worldmap w, int Y, int X, Node *current);
 
 worldmap read_turn(worldmap w);
 worldmap initialize_map(worldmap w);

@@ -27,99 +27,108 @@ worldmap cleanup_map(worldmap world){
 	return world;
 }
 
-char *search(worldmap w, int Y, int X, int Yn, int Xn, Node *current){
+char *search(worldmap w, int Y, int X, Node *current){
 
-	Xn = mod(Xn,w.cols);
-	Yn = mod(Yn,w.rows);
-	current->item->targetx = Xn;
-	current->item->targety = Yn;
-	fprintf(stderr,"searching for a way to (%d,%d) using BFS\n",Xn, Yn);
+	fprintf(stderr,"searching for a way to food using BFS\n");
 	ant *queue = List_create();
 	List_insert(queue);
-	List_print(queue);
+	//List_print(queue);
 	queue->head->bfs->n = 0;
 	queue->head->bfs->x = X;
 	queue->head->bfs->y = Y;
+	int Xn = current->item->x; 
+	int Yn = current->item->y;
 	w.map[Y][X].bfs = 0;
 	int finished = 0;
 	int noroute = 0;
 	int longest = 999;
 	//FOR MAP, VISITED = 0
-	int maxdepth = 7;
+	int maxdepth = 10;
 	while(!finished){
 		if(queue->counter == 0){
 			finished = 1;
 			noroute = 1;
 		}
-		else if(queue->head->bfs->x == Xn && queue->head->bfs->y == Yn){
+		else if(w.map[queue->head->bfs->y][queue->head->bfs->x].type == CELL_FOOD){ //queue->head->bfs->x == Xn && queue->head->bfs->y == Yn
+			Xn = queue->head->bfs->x;
+			Yn = queue->head->bfs->y;	
+			fprintf(stderr,"found food on (%d,%d)\n",Xn,Yn);		
 			longest = queue->head->bfs->n;
 			finished = 1;
 		}else{
 			if(queue->head->bfs->n+1 > maxdepth){
-				finished = 1;
 				noroute = 1;
+				break;
 			}
 			int x = queue->head->bfs->x;
 			int y = queue->head->bfs->y;
 			w.map[y][x].bfsvisited = 1;
 			Node *delete = queue->head;
-			if(w.map[y+1][x].type != CELL_WATER && !w.map[y+1][x].bfsvisited){
+			if(w.map[mod(y+1,w.rows)][x].type != CELL_WATER && !w.map[mod(y+1,w.rows)][x].bfsvisited){
 				List_append(queue);
 				queue->head->prev->bfs->n = delete->bfs->n + 1;
-				w.map[y+1][x].bfs = queue->head->bfs->n;
+				w.map[mod(y+1,w.rows)][x].bfs = queue->head->prev->bfs->n;
 				queue->head->prev->bfs->x = x;
-				queue->head->prev->bfs->y = y+1;
+				queue->head->prev->bfs->y = mod(y+1,w.rows);
 			}
-			if(w.map[y-1][x].type != CELL_WATER && !w.map[y-1][x].bfsvisited){
+			if(w.map[mod(y-1,w.rows)][x].type != CELL_WATER && !w.map[mod(y-1,w.rows)][x].bfsvisited){
 				List_append(queue);
 				queue->head->prev->bfs->n = delete->bfs->n + 1;
-				w.map[y-1][x].bfs = queue->head->bfs->n;
+				w.map[mod(y-1,w.rows)][x].bfs = queue->head->prev->bfs->n;
 				queue->head->prev->bfs->x = x;
-				queue->head->prev->bfs->y = y-1;
+				queue->head->prev->bfs->y = mod(y-1,w.rows);
 			}
-			if(w.map[y][x+1].type != CELL_WATER && !w.map[y][x+1].bfsvisited){
+			if(w.map[y][mod(x+1,w.cols)].type != CELL_WATER && !w.map[y][mod(x+1,w.cols)].bfsvisited){
 				List_append(queue);
-				queue->head->bfs->n = delete->bfs->n + 1;
-				w.map[y][x+1].bfs = queue->head->bfs->n;
-				queue->head->prev->bfs->x = x+1;
+				queue->head->prev->bfs->n = delete->bfs->n + 1;
+				w.map[y][mod(x+1,w.cols)].bfs = queue->head->prev->bfs->n;
+				queue->head->prev->bfs->x = mod(x+1,w.cols);
 				queue->head->prev->bfs->y = y;
 			}
-			if(w.map[y][x-1].type != CELL_WATER && !w.map[y][x-1].bfsvisited){
+			if(w.map[y][mod(x-1,w.cols)].type != CELL_WATER && !w.map[y][mod(x-1,w.cols)].bfsvisited){
 				List_append(queue);
 				queue->head->prev->bfs->n = delete->bfs->n + 1;
-				w.map[y][x-1].bfs = queue->head->bfs->n;
-				queue->head->prev->bfs->x = x-1;
+				w.map[y][mod(x-1,w.cols)].bfs = queue->head->prev->bfs->n;
+				queue->head->prev->bfs->x = mod(x-1,w.cols);
 				queue->head->prev->bfs->y = y;
 			}
 			List_remove(queue,delete);
 		}
 	}
 	if(!noroute){
+		print_bfs(w);
 		char *route = (char *)malloc(sizeof(char)*longest);
 		int Xl = Xn;
 		int Yl = Yn;
+		current->item->targetx = Xn;
+		current->item->targety = Yn;
+		current->item->moving = 1;
 		int num = longest;
+
+		fprintf(stderr, "the route will take %d turns \nroute : ", longest);
 		for(int i = longest-1; i >= 0; i--){
-			if(w.map[Yl+1][Xl].bfs == num-1){
+			if(w.map[mod(Yl+1,w.rows)][Xl].bfs == num-1){
 				route[i] = 'N';
 				num--;
-				Yl = Yl+1;
-			}else if(w.map[Yl-1][Xl].bfs == num-1){
+				Yl = mod(Yl+1,w.rows);
+			}else if(w.map[mod(Yl-1,w.rows)][Xl].bfs == num-1){
 				route[i] = 'S';
 				num--;
-				Yl = Yl-1;
-			}else if(w.map[Yl][Xl+1].bfs == num-1){
+				Yl = mod(Yl-1,w.rows);
+			}else if(w.map[Yl][mod(Xl+1,w.cols)].bfs == num-1){
 				route[i] = 'W';
 				num--;
-				Xl = Xl+1;
-			}else if(w.map[Yl][Xl-1].bfs == num-1){
+				Xl = mod(Xl+1,w.cols);
+			}else if(w.map[Yl][mod(Xl-1,w.cols)].bfs == num-1){
 				route[i] = 'E';
 				num--;
-				Xl = Xl-1;
+				Xl = mod(Xl-1,w.cols);
 			}else{
-				fprintf(stderr, "Something went wrong in the DFS!\n");
+				fprintf(stderr, "Something went wrong in the BFS!\n");
 			}
+			fprintf(stderr, "%c", route[i]);
 		}
+		fprintf(stderr, "\n");
 		return route;
 	}
 	else{
@@ -163,6 +172,21 @@ void print_map(worldmap w){
 	}
 }
 
+void print_bfs(worldmap w){
+	for(int i = 0; i < w.rows; i++){
+	fprintf(stderr,"%d ", i);
+		for(int j = 0; j < w.cols; j++){
+				if(w.map[i][j].bfs == -1){
+					fprintf(stderr,".");
+				}else{
+					fprintf(stderr,"%d", w.map[i][j].bfs);
+				}
+
+		}
+	fprintf(stderr,"\n");
+	}
+}
+
 worldmap reset_map(worldmap world){
 	for(int i = 0; i < world.rows; i++){
 		for(int j = 0; j < world.cols; j++){
@@ -180,6 +204,7 @@ worldmap soft_reset_map(worldmap world){
 			if(world.map[i][j].type != CELL_WATER && world.map[i][j].type != CELL_HILL && (world.map[i][j].type != CELL_ANT || world.map[i][j].owner != 0)){ 
 				world.map[i][j].type = CELL_DIRT;
 				world.map[i][j].owner = -1;
+				world.map[i][j].bfs = -1;
 			}
 		}
 	}
@@ -564,9 +589,9 @@ void List_remove(ant *list, Node *node){
 		}	
 	}
 	if(found){
-		fprintf(stderr, "List before deleting ant %d\n",node->item->id);
-		List_print(list);
-		fprintf(stderr, "Deleted ant %d! New list will be printed:\n", node->item->id);
+		//fprintf(stderr, "List before deleting ant %d\n",node->item->id);
+		//List_print(list);
+		//fprintf(stderr, "Deleted ant %d! New list will be printed:\n", node->item->id);
 		if(previous == list->head){
 			list->head = previous->next;
 		}
@@ -577,7 +602,7 @@ void List_remove(ant *list, Node *node){
 		free(previous->item);
 		free(previous);
 		list->counter--;
-		List_print(list);
+		//List_print(list);
 	}else{
 		fprintf(stderr,"Error, node not found!\n");
 	}
