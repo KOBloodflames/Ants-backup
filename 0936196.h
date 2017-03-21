@@ -9,12 +9,12 @@ typedef struct {char *routelist; int x; int y;} route;
 
 /*linked list*/
 struct Node;
-typedef struct Item{int id; int x; int y; ant_role role; direction lastmove; int water; int squad; int alive; int moving; int targetx; int targety; int routenr; route routes;} Item;
+typedef struct Item{int id; int x; int y; ant_role role; direction lastmove; int water; int squad; int alive; int moving; int targetx; int targety; int routenr; route *routes; int fight; int fightturns; int fightready;} Item;
 typedef struct BFS{int n; int visited; int x; int y;} BFS;
 typedef struct Node{struct Node* next; struct Node* prev; struct Item* item; struct BFS* bfs;} Node;
 typedef struct ant {int idcounter; int counter; Node* head; int squadsize[3]; int nrsquads; char squadop[3]; int squadmembers[3][9];} ant;
 
-typedef struct {cell **map; int rows; int cols; unsigned int turn; int end; ant *ants; int antnr;} worldmap;
+typedef struct {cell **map; int rows; int cols; unsigned int turn; int end; ant *ants; int antnr; int razing;} worldmap;
 
 int mod(int a, int b);
 
@@ -36,6 +36,8 @@ void print_vision(worldmap w);
 worldmap reset_vision(worldmap w);
 worldmap check_vision(worldmap w, game_settings g);
 
+route *search_vision(worldmap w, int Y, int X, Node *current);
+route *search_hill(worldmap w, int Y, int X, Node *current);
 
 void print_danger(worldmap w);
 worldmap reset_danger(worldmap w);
@@ -50,7 +52,7 @@ void print_bfs(worldmap w);
 
 worldmap check_moves(worldmap w, int x);
 
-route search(worldmap w, int Y, int X, Node *current);
+route *search(worldmap w, int Y, int X, Node *current);
 
 worldmap read_turn(worldmap w, game_settings s);
 worldmap initialize_map(worldmap w);
