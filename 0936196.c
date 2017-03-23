@@ -30,7 +30,15 @@ void main(void)
 		world = check_vision(world, settings);
 		//print_map(world);
 		if(world.razing == 1 && previousraze == 0){
+			fprintf(stderr, "still razing!\n");
 			world = assign_squads(world);
+		}else if(world.razing == 0){
+			fprintf(stderr, "no razing!\n");
+			Node *current = world.ants->head;
+			for(int i = 0; i < world.ants->counter; i++){
+				current->item->role = GATHERER;
+				current = current->next;
+			}
 		}
 		world = send_orders(world);
 		//List_print(world.ants);
@@ -307,10 +315,11 @@ worldmap send_orders(worldmap w){
 					}
 					
 				}else if(current->item->role == SOLDIER){
-					//fprintf(stderr, "ant %d is a soldier!\n", current->item->id);	
+					fprintf(stderr, "ant %d is a soldier!\n", current->item->id);	
 					current->item->routes = search_hill(w,i,j, current);
 					current->item->routenr = 0;
-					if(strcmp(current->item->routes->routelist, "x") != 0){		
+					if(strcmp(current->item->routes->routelist, "x") != 0){	
+						fprintf(stderr, "ant %d found a hill!\n", current->item->id);		
 						//fprintf(stderr, "Ant %d is still moving towards target!\n It will try to move in %c from (%d,%d)\n", current->item->id, current->item->routes->routelist[current->item->routenr],current->item->x,current->item->y);
 						int i = current->item->y;
 						int j = current->item->x;
@@ -360,6 +369,8 @@ worldmap send_orders(worldmap w){
 							}
 						}
 
+					}else{
+						fprintf(stderr, "No hill found\n");
 					}			
 					/*int x = current->item->x;
 					int y = current->item->y;

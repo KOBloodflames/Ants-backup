@@ -147,7 +147,7 @@ worldmap check_moves(worldmap w, int x){
 
 route *search(worldmap w, int Y, int X, Node *current){
 
-	fprintf(stderr,"searching for a way to food using BFS\n");
+	//fprintf(stderr,"searching for a way to food using BFS\n");
 	w = bfs_reset(w);
 	ant *queue = List_create();
 	List_insert(queue);
@@ -171,14 +171,14 @@ route *search(worldmap w, int Y, int X, Node *current){
 		int x = queue->head->bfs->x;
 		int y = queue->head->bfs->y;
 		if(queue->counter == 0){
-			fprintf(stderr,"No route possible\n");
+			//fprintf(stderr,"No route possible\n");
 			noroute = 1;
 			break;
 		}
 		if(w.map[queue->head->bfs->y][queue->head->bfs->x].type == CELL_FOOD || (w.map[queue->head->bfs->y][queue->head->bfs->x].type == CELL_ANT_ON_HILL && w.map[queue->head->bfs->y][queue->head->bfs->x].owner != 0) || w.map[queue->head->bfs->y][queue->head->bfs->x].type == CELL_HILL && w.map[queue->head->bfs->y][queue->head->bfs->x].owner != 0){ //queue->head->bfs->x == Xn && queue->head->bfs->y == Yn
 			Xn = queue->head->bfs->x;
 			Yn = queue->head->bfs->y;	
-			fprintf(stderr,"found food on (%d,%d)\n",Xn,Yn);		
+			//fprintf(stderr,"found food on (%d,%d)\n",Xn,Yn);		
 			longest = queue->head->bfs->n;
 			break;
 		}else{
@@ -221,8 +221,8 @@ route *search(worldmap w, int Y, int X, Node *current){
 
 	diff = clock() - start;
 	int msec = diff * 1000 / CLOCKS_PER_SEC;
-	fprintf(stderr, "Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
-	fprintf(stderr, "The BFS took %d loops\n", iterations);
+	//fprintf(stderr, "Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+	//fprintf(stderr, "The BFS took %d loops\n", iterations);
 	if(!noroute){
 		//print_bfs(w);
 		route *routed = (route *)malloc(sizeof(route)*1);
@@ -235,7 +235,7 @@ route *search(worldmap w, int Y, int X, Node *current){
 		current->item->moving = 0;
 		int num = longest;
 
-		fprintf(stderr, "the route will take %d turns \nroute : ", longest);
+		//fprintf(stderr, "the route will take %d turns \nroute : ", longest);
 		routed->x = Xn;
 		routed->y = Yn;
 		for(int i = longest-1; i >= 0; i--){
@@ -256,16 +256,16 @@ route *search(worldmap w, int Y, int X, Node *current){
 				num--;
 				Xl = mod(Xl-1,w.cols);
 			}else{
-				fprintf(stderr, "Something went wrong in the BFS!\n");
+				//fprintf(stderr, "Something went wrong in the BFS!\n");
 			}
-			fprintf(stderr, "%c", routed->routelist[i]);
+			//fprintf(stderr, "%c", routed->routelist[i]);
 		}
-		fprintf(stderr, "\n");
+		//fprintf(stderr, "\n");
 		List_destroy(queue);
 		return routed;
 	}
 	else{
-		fprintf(stderr, "Returning x\n");
+		//fprintf(stderr, "Returning x\n");
 		route *wrong = (route *)malloc(sizeof(route));
 		wrong->routelist = "x";
 		List_destroy(queue);
@@ -278,7 +278,7 @@ route *search(worldmap w, int Y, int X, Node *current){
 
 route *search_vision(worldmap w, int Y, int X, Node *current){
 
-	fprintf(stderr,"searching for a way to vision using BFS\n");
+	//fprintf(stderr,"searching for a way to vision using BFS\n");
 	w = bfs_reset(w);
 	ant *queue = List_create();
 	List_insert(queue);
@@ -311,14 +311,14 @@ route *search_vision(worldmap w, int Y, int X, Node *current){
 		int x = queue->head->bfs->x;
 		int y = queue->head->bfs->y;
 		if(queue->counter == 0){
-			fprintf(stderr,"No route possible\n");
+			//fprintf(stderr,"No route possible\n");
 			noroute = 1;
 			break;
 		}
 		if(w.map[queue->head->bfs->y][queue->head->bfs->x].vision == 0){ //queue->head->bfs->x == Xn && queue->head->bfs->y == Yn
 			Xn = queue->head->bfs->x;
 			Yn = queue->head->bfs->y;	
-			fprintf(stderr,"found food on (%d,%d)\n",Xn,Yn);		
+			//fprintf(stderr,"found food on (%d,%d)\n",Xn,Yn);		
 			longest = queue->head->bfs->n;
 			break;
 		}else{
@@ -361,8 +361,8 @@ route *search_vision(worldmap w, int Y, int X, Node *current){
 
 	diff = clock() - start;
 	int msec = diff * 1000 / CLOCKS_PER_SEC;
-	fprintf(stderr, "Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
-	fprintf(stderr, "The BFS took %d loops\n", iterations);
+	//fprintf(stderr, "Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+	//fprintf(stderr, "The BFS took %d loops\n", iterations);
 	if(!noroute){
 		//print_bfs(w);
 		route *routed = (route *)malloc(sizeof(route)*1);
@@ -375,7 +375,7 @@ route *search_vision(worldmap w, int Y, int X, Node *current){
 		current->item->moving = 0;
 		int num = longest;
 
-		fprintf(stderr, "the route will take %d turns \nroute : ", longest);
+		//fprintf(stderr, "the route will take %d turns \nroute : ", longest);
 		routed->x = Xn;
 		routed->y = Yn;
 		for(int i = longest-1; i >= 0; i--){
@@ -396,16 +396,16 @@ route *search_vision(worldmap w, int Y, int X, Node *current){
 				num--;
 				Xl = mod(Xl-1,w.cols);
 			}else{
-				fprintf(stderr, "Something went wrong in the BFS!\n");
+				//fprintf(stderr, "Something went wrong in the BFS!\n");
 			}
-			fprintf(stderr, "%c", routed->routelist[i]);
+			//fprintf(stderr, "%c", routed->routelist[i]);
 		}
-		fprintf(stderr, "\n");
+		//fprintf(stderr, "\n");
 		List_destroy(queue);
 		return routed;
 	}
 	else{
-		fprintf(stderr, "Returning x\n");
+		//fprintf(stderr, "Returning x\n");
 		route *wrong = (route *)malloc(sizeof(route));
 		wrong->routelist = "x";
 		List_destroy(queue);
@@ -419,7 +419,7 @@ route *search_vision(worldmap w, int Y, int X, Node *current){
 
 route *search_hill(worldmap w, int Y, int X, Node *current){
 
-	fprintf(stderr,"searching for a way to an enmey hill using BFS\n");
+	//fprintf(stderr,"searching for a way to an enmey hill using BFS\n");
 	w = bfs_reset(w);
 	ant *queue = List_create();
 	List_insert(queue);
@@ -452,14 +452,14 @@ route *search_hill(worldmap w, int Y, int X, Node *current){
 		int x = queue->head->bfs->x;
 		int y = queue->head->bfs->y;
 		if(queue->counter == 0){
-			fprintf(stderr,"No route possible\n");
+			//fprintf(stderr,"No route possible\n");
 			noroute = 1;
 			break;
 		}
 		if(w.map[queue->head->bfs->y][queue->head->bfs->x].owner != 0 && (w.map[queue->head->bfs->y][queue->head->bfs->x].type == CELL_HILL || w.map[queue->head->bfs->y][queue->head->bfs->x].type == CELL_ANT_ON_HILL) ){ //queue->head->bfs->x == Xn && queue->head->bfs->y == Yn
 			Xn = queue->head->bfs->x;
 			Yn = queue->head->bfs->y;	
-			fprintf(stderr,"found food on (%d,%d)\n",Xn,Yn);		
+			//fprintf(stderr,"found food on (%d,%d)\n",Xn,Yn);		
 			longest = queue->head->bfs->n;
 			break;
 		}else{
@@ -502,10 +502,10 @@ route *search_hill(worldmap w, int Y, int X, Node *current){
 
 	diff = clock() - start;
 	int msec = diff * 1000 / CLOCKS_PER_SEC;
-	fprintf(stderr, "Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
-	fprintf(stderr, "The BFS took %d loops\n", iterations);
+	//fprintf(stderr, "Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+	//fprintf(stderr, "The BFS took %d loops\n", iterations);
 	if(!noroute){
-		//print_bfs(w);
+		print_bfs(w);
 		route *routed = (route *)malloc(sizeof(route)*1);
 		char *routes = (char *)malloc(sizeof(char)*longest);
 		routed->routelist = routes;
@@ -546,7 +546,7 @@ route *search_hill(worldmap w, int Y, int X, Node *current){
 		return routed;
 	}
 	else{
-		fprintf(stderr, "Returning x\n");
+		//fprintf(stderr, "Returning x\n");
 		route *wrong = (route *)malloc(sizeof(route));
 		wrong->routelist = "x";
 		List_destroy(queue);
@@ -571,7 +571,7 @@ void bfs_print_visited(worldmap w){
 	fprintf(stderr, "printing visited\n");
 	for(int i = 0; i < w.rows; i++){
 		for(int j = 0; j < w.cols; j++){
-			fprintf(stderr, "%d",w.map[i][j].bfsvisited);
+			//fprintf(stderr, "%d",w.map[i][j].bfsvisited);
 		}
 		fprintf(stderr, "\n");
 	}
@@ -752,14 +752,14 @@ s->player_seed = value;
 worldmap update_ants(worldmap w, int i, int j, int in, int jn, Node *current){
 	if(w.map[in][jn].type != CELL_WATER){
 		if(jn < 0 || jn > w.cols){
-			fprintf(stderr, "amount of columns: %d, previous number j: %d\n",w.cols,jn);
+			//fprintf(stderr, "amount of columns: %d, previous number j: %d\n",w.cols,jn);
 			jn = mod(jn,w.cols);
 		}	
 		if(in < 0 || in > w.rows){
-			fprintf(stderr, "amount of rows: %d, previous number i: %d\n",w.rows, in);
+			//fprintf(stderr, "amount of rows: %d, previous number i: %d\n",w.rows, in);
 			in = mod(in,w.rows);
 		}
-		fprintf(stderr, "Moving ant %d, from (%d,%d) to (%d,%d)\n",current->item->id, j, i, jn, in);	
+		//fprintf(stderr, "Moving ant %d, from (%d,%d) to (%d,%d)\n",current->item->id, j, i, jn, in);	
 		if(w.map[i][j].type == CELL_ANT_ON_HILL){
 			w.map[i][j].type = CELL_HILL;
 		}else{
@@ -775,13 +775,14 @@ worldmap update_ants(worldmap w, int i, int j, int in, int jn, Node *current){
 		current->item->y = in;
 		current->item->x = jn;
 	}else{
-		fprintf(stderr, "Could not move!\n");
+		//fprintf(stderr, "Could not move!\n");
 	}
 	return w;
 }
 
 
 worldmap read_turn(worldmap w, game_settings s){
+	w.razing = 0;
 	char *line = NULL;
 	size_t linelength = 0;
 	char *key = NULL;
@@ -810,29 +811,31 @@ worldmap read_turn(worldmap w, game_settings s){
 				}
 				else if(strcmp(key, "turn") == 0){
 					w.turn = strtol(strtok(saveptr, delimiters), &key, 10);	
-					fprintf(stderr, "saving a turn %d\n", w.turn);			
+					//fprintf(stderr, "saving a turn %d\n", w.turn);			
 				}
 				else if(strcmp(key, "w") == 0){
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					col = strtol(saveptr,&key,10);
-					fprintf(stderr, "saving a water on row %ld and col %ld\n", row,col);
+					//fprintf(stderr, "saving a water on row %ld and col %ld\n", row,col);
 					w.map[row][col].type = CELL_WATER;
 				}
 				else if(strcmp(key, "f") == 0){
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					col = strtol(saveptr,&key,10);
-					fprintf(stderr, "saving a food on row %ld and col %ld\n", row,col);
+					//fprintf(stderr, "saving a food on row %ld and col %ld\n", row,col);
 					w.map[row][col].type = CELL_FOOD;
 				}
 				else if(strcmp(key, "h") == 0){
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					col = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					owner = strtol(saveptr,&key,10);
-					fprintf(stderr, "saving a hill of %ld on row %ld and col %ld\n", owner, row,col);
+					//fprintf(stderr, "saving a hill of %ld on row %ld and col %ld\n", owner, row,col);
 					w.map[row][col].type = CELL_HILL;
 					w.map[row][col].owner = (int)owner;
 					if((int)owner != 0){
 						w.razing = 1;
+						w.razex = col;
+						w.razey = row;
 						fprintf(stderr, "razing!!!\n");
 					}
 				}
@@ -840,7 +843,7 @@ worldmap read_turn(worldmap w, game_settings s){
 					row = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					col = strtol(strtok_r(saveptr, delimiters, &saveptr), &key, 10);
 					owner = strtol(saveptr,&key,10);
-					fprintf(stderr, "saving an ant of %ld on row %ld and col %ld\n", owner, row,col);
+					//fprintf(stderr, "saving an ant of %ld on row %ld and col %ld\n", owner, row,col);
 					w.map[row][col].owner = (int)owner;
 					if(w.map[row][col].type == CELL_HILL){
 						w.map[row][col].type = CELL_ANT_ON_HILL;
@@ -854,7 +857,7 @@ worldmap read_turn(worldmap w, game_settings s){
 						Node *current = w.ants->head;
 						for(int i = 0 ; i < w.ants->counter; i++){
 							if(row == current->item->y && col == current->item->x){
-								fprintf(stderr, "Ant %d is alive!\n",current->item->id);
+								//fprintf(stderr, "Ant %d is alive!\n",current->item->id);
 								current->item->alive = 1;
 								current->item->fight = 0;
 								antfound = 1;
@@ -869,7 +872,7 @@ worldmap read_turn(worldmap w, game_settings s){
 							w.ants->head->item->x = col;
 							w.ants->head->item->alive = 1;
 							w.ants->head->item->moving = 0;
-							fprintf(stderr, "Ant %d has spawned!\n",w.ants->head->item->id);
+							//fprintf(stderr, "Ant %d has spawned!\n",w.ants->head->item->id);
 							w.antnr++;
 						}
 					}
@@ -881,9 +884,95 @@ worldmap read_turn(worldmap w, game_settings s){
 	return w;
 }
 
-
-
 worldmap assign_squads(worldmap w){
+	int soldiers = w.ants->counter * 0.5;
+	w = bfs_reset(w);
+	ant *queue = List_create();
+	List_insert(queue);
+	//List_print(queue);
+	queue->head->bfs->n = 0;
+	queue->head->bfs->x = w.razex;
+	queue->head->bfs->y = w.razey;
+	queue->counter = 1;
+	w.map[w.razey][w.razex].bfs = 0;
+	w.map[w.razey][w.razex].bfsvisited = 1;
+	int found = 0;
+	int Xn, Yn;
+	int noroute = 0;
+	int longest = 999;
+	//FOR MAP, VISITED = 0
+	int maxdepth = 9999;
+	int iterations = 0;
+	clock_t start = clock(), diff;
+	while(1){
+		iterations++;
+		int x = queue->head->bfs->x;
+		int y = queue->head->bfs->y;
+		if(queue->counter == 0){
+			//fprintf(stderr,"No route possible\n");
+			noroute = 1;
+			break;
+		}
+		if(w.map[queue->head->bfs->y][queue->head->bfs->x].type == CELL_ANT && w.map[queue->head->bfs->y][queue->head->bfs->x].owner == 0){
+			Xn = queue->head->bfs->x;
+			Yn = queue->head->bfs->y;	
+			fprintf(stderr,"found soldier on (%d,%d)\n",Xn,Yn);
+			Node *current = w.ants->head;
+			for(int i = 0; i < w.ants->counter; i++){
+				if(current->item->x == Xn && current->item->y == Yn){
+					current->item->role = SOLDIER;
+					fprintf(stderr,"ant %d is became a soldier!\n",current->item->id);
+					break;
+				}
+				current = current->next;
+			}
+			found++;
+			if(found > soldiers){
+				break;
+			}		
+		}
+
+		if(w.map[mod(y+1,w.rows)][x].type != CELL_WATER && w.map[mod(y+1,w.rows)][x].bfsvisited == 0){
+			List_append(queue);
+			queue->head->prev->bfs->n = queue->head->bfs->n + 1;
+			w.map[mod(y+1,w.rows)][x].bfs = queue->head->prev->bfs->n;
+			queue->head->prev->bfs->x = x;
+			queue->head->prev->bfs->y = mod(y+1,w.rows);
+			w.map[mod(y+1,w.rows)][x].bfsvisited = 1;
+		}
+		if(w.map[mod(y-1,w.rows)][x].type != CELL_WATER && w.map[mod(y-1,w.rows)][x].bfsvisited == 0){
+			List_append(queue);
+			queue->head->prev->bfs->n = queue->head->bfs->n + 1;
+			w.map[mod(y-1,w.rows)][x].bfs = queue->head->prev->bfs->n;
+			queue->head->prev->bfs->x = x;
+			queue->head->prev->bfs->y = mod(y-1,w.rows);
+			w.map[mod(y-1,w.rows)][x].bfsvisited = 1;
+		}
+		if(w.map[y][mod(x+1,w.cols)].type != CELL_WATER && w.map[y][mod(x+1,w.cols)].bfsvisited == 0){
+			List_append(queue);
+			queue->head->prev->bfs->n = queue->head->bfs->n + 1;
+			w.map[y][mod(x+1,w.cols)].bfs = queue->head->prev->bfs->n;
+			queue->head->prev->bfs->x = mod(x+1,w.cols);
+			queue->head->prev->bfs->y = y;
+			w.map[y][mod(x+1,w.cols)].bfsvisited = 1;
+		}
+		if(w.map[y][mod(x-1,w.cols)].type != CELL_WATER && w.map[y][mod(x-1,w.cols)].bfsvisited == 0){
+			List_append(queue);
+			queue->head->prev->bfs->n = queue->head->bfs->n + 1;
+			w.map[y][mod(x-1,w.cols)].bfs = queue->head->prev->bfs->n;
+			queue->head->prev->bfs->x = mod(x-1,w.cols);
+			queue->head->prev->bfs->y = y;
+			w.map[y][mod(x-1,w.cols)].bfsvisited = 1;
+		}
+		List_remove(queue,queue->head);
+	}	
+
+}
+
+
+
+
+worldmap assign_squads2(worldmap w){
 	int defenders = 0;
 	int soldiers = 0;
 	/*if(w.razing == 0){
@@ -892,7 +981,7 @@ worldmap assign_squads(worldmap w){
 	}else{*/
 		defenders = w.ants->counter * 0;
 		soldiers = w.ants->counter * 0.5;
-		fprintf(stderr, "assigning %d soldiers!\n", soldiers);
+		//fprintf(stderr, "assigning %d soldiers!\n", soldiers);
 	//}
 	Node *current = w.ants->head;
 	for(int i = 0; i < soldiers; i++){
@@ -923,7 +1012,8 @@ worldmap assign_squads(worldmap w){
 		current->item->squad = 0;
 		current->item->role = GATHERER;
 		current = current->next;
-	}	
+	}
+		
 }
 
 void print_danger(worldmap w){
@@ -1019,7 +1109,7 @@ worldmap set_danger(worldmap w, game_settings g, int x0, int y0){
 		}
 	}
 	if(fight){
-		fprintf(stderr, "ants are fighting!\n");
+		//fprintf(stderr, "ants are fighting!\n");
 		int fightready = 0;
 		if(firstring == ring){
 			fightready = 1;

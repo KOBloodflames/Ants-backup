@@ -14,7 +14,7 @@ typedef struct BFS{int n; int visited; int x; int y;} BFS;
 typedef struct Node{struct Node* next; struct Node* prev; struct Item* item; struct BFS* bfs;} Node;
 typedef struct ant {int idcounter; int counter; Node* head; int squadsize[3]; int nrsquads; char squadop[3]; int squadmembers[3][9];} ant;
 
-typedef struct {cell **map; int rows; int cols; unsigned int turn; int end; ant *ants; int antnr; int razing;} worldmap;
+typedef struct {cell **map; int rows; int cols; unsigned int turn; int end; ant *ants; int antnr; int razing; int razex; int razey;} worldmap;
 
 int mod(int a, int b);
 
